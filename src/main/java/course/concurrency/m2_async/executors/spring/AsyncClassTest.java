@@ -10,7 +10,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 @Component
+@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class AsyncClassTest {
+    private final AsyncClassTest test;
 
     @Autowired
     public ApplicationContext context;
@@ -19,10 +21,14 @@ public class AsyncClassTest {
     @Qualifier("applicationTaskExecutor")
     private ThreadPoolTaskExecutor executor;
 
+    @Autowired
+    public AsyncClassTest(AsyncClassTest test) {
+        this.test = test;
+    }
     @Async
     public void runAsyncTask() {
         System.out.println("runAsyncTask: " + Thread.currentThread().getName());
-       internalTask();
+        test.internalTask();
     }
     @Async
     public void internalTask() {
