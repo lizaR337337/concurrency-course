@@ -22,15 +22,14 @@ public class PriceAggregator {
 
     public double getMinPrice(long itemId) {
 
-        List<CompletableFuture<Double>> futureList = shopIds.parallelStream()
-                .map(shopId -> CompletableFuture.supplyAsync(() -> priceRetriever.getPrice(itemId, shopId), executor))
-                .collect(toList());
+        List<CompletableFuture<Double>> futureList=new ArrayList<>();
 
-        try {
-            Thread.sleep(2900);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        for (Long shopId: shopIds) {
+            futureList.add(CompletableFuture
+                    .supplyAsync(() -> priceRetriever.getPrice(itemId, shopId), executor));
         }
+
+        futureList.forEach(future -> future.orTimeout(2900, TimeUnit.MILLISECONDS));
 
         return futureList.stream()
                 .map(future -> future.isCompletedExceptionally() ? Double.NaN : future.getNow(Double.NaN))
